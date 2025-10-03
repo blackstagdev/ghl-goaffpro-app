@@ -7,18 +7,13 @@ export async function POST({ request }) {
   const body = await request.json();
   const contact = body.contacts?.[0];
 
-  // 1. Get the specific custom field
-  const targetFieldId = "UJBoqg0TlLO6GAVbzAag"; // Wellness Solutions field
+  const targetFieldId = "UJBoqg0TlLO6GAVbzAag"; 
   const field = contact?.customField?.find(f => f.id === targetFieldId);
 
   if (!field) {
-    console.warn(`⚠️ Contact ${contact?.id} does not have custom field ${targetFieldId}`);
+    console.log(`ℹ️ No referredBy field for contact ${contact?.id}`);
     return new Response(
-      JSON.stringify({
-        ok: true,
-        referredBy: null,
-        message: `Custom field ReferredBy not found`
-      }),
+      JSON.stringify({ ok: true, referredBy: null, message: "Custom field ReferredBy not found" }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -26,12 +21,11 @@ export async function POST({ request }) {
   const fieldValue = field.value;
   console.log("🎯 Extracted custom field:", fieldValue);
 
-  // 2. Fetch affiliates from GoAffPro
   try {
     const res = await fetch("https://api.goaffpro.com/v1/admin/affiliates?fields=id,name,email,created_at,ref_code", {
       method: "GET",
       headers: {
-        "X-GOAFFPRO-ACCESS-TOKEN": "5d7c7806d9545a1d44d0dfd9da39e4b9fc513d43fe24a56cb9ced3280252ac22", 
+        "X-GOAFFPRO-ACCESS-TOKEN": process.env.GOAFFPRO_API_KEY,
         "Content-Type": "application/json"
       }
     });
@@ -40,12 +34,15 @@ export async function POST({ request }) {
       throw new Error(`GoAffPro API error: ${res.statusText}`);
     }
 
-    const affiliates = await res.json();
+    const data = await res.json();
+    const affiliates = data.affiliates || [];
+
     console.log("✅ Affiliates fetched:", affiliates.length);
 
-    // 3. Compare fieldValue with ref_code
     const matchedAffiliate = affiliates.find(
-      a => a.ref_code === fieldValue || a.name === fieldValue
+      a =>
+        a.ref_code?.toLowerCase() === fieldValue.toLowerCase() ||
+        a.name?.toLowerCase() === fieldValue.toLowerCase()
     );
 
     if (matchedAffiliate) {
@@ -56,8 +53,8 @@ export async function POST({ request }) {
       });
     } else {
       console.log("❌ No match for:", fieldValue);
-      return new Response(JSON.stringify({ ok: false, match: null }), {
-        status: 404,
+      return new Response(JSON.stringify({ ok: true, match: null }), {
+        status: 200,
         headers: { "Content-Type": "application/json" }
       });
     }
