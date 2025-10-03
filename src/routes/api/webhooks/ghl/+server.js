@@ -15,10 +15,11 @@ export async function POST({ request }) {
     console.warn(`⚠️ Contact ${contact?.id} does not have custom field ${targetFieldId}`);
     return new Response(
       JSON.stringify({
-        ok: false,
-        error: `Custom field ${targetFieldId} not found for this contact`
+        ok: true,
+        referredBy: null,
+        message: `Custom field ReferredBy not found`
       }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }
 
