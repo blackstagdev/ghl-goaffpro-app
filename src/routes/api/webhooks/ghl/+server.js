@@ -10,16 +10,20 @@ export async function POST({ request }) {
   // 1. Get the specific custom field
   const targetFieldId = "UJBoqg0TlLO6GAVbzAag"; // Wellness Solutions field
   const field = contact?.customField?.find(f => f.id === targetFieldId);
-  const fieldValue = field?.value;
 
-  console.log("🎯 Extracted custom field:", fieldValue);
-
-  if (!fieldValue) {
-    return new Response(JSON.stringify({ ok: false, error: "No field value found" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" }
-    });
+  if (!field) {
+    console.warn(`⚠️ Contact ${contact?.id} does not have custom field ${targetFieldId}`);
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: `Custom field ${targetFieldId} not found for this contact`
+      }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
   }
+
+  const fieldValue = field.value;
+  console.log("🎯 Extracted custom field:", fieldValue);
 
   // 2. Fetch affiliates from GoAffPro
   try {
