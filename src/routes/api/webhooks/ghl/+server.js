@@ -44,7 +44,9 @@ export async function POST({ request }) {
     console.log("✅ Affiliates fetched:", affiliates.length);
 
     // 3. Compare fieldValue with ref_code
-    const matchedAffiliate = affiliates.find(a => a => a.ref_code === fieldValue || a.name === fieldValue);
+    const matchedAffiliate = affiliates.find(
+      a => a.ref_code === fieldValue || a.name === fieldValue
+    );
 
     if (matchedAffiliate) {
       console.log("🎉 Match found:", matchedAffiliate);
