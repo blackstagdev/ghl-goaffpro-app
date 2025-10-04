@@ -102,6 +102,7 @@ export async function POST({ request }) {
     // 4️⃣ Determine assigned owner based on top-level name
     const OWNER_MAP = {
       "andrew dorsey": "BajUT5rjQGnHGP1lNUDr",
+      "john roush": "hdpyoUB6nRTiysyUmTQK",
       "scott reidl": "VoAjMNrKvRv41DbpVhsA",
       "raoul bowman": "rjWUeYYFPLEalKgnAD5f",
       "russell o’hare": "eNQZEXvcLgRfUVYWu2fU",
