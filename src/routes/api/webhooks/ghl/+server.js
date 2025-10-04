@@ -87,16 +87,16 @@ export async function POST({ request }) {
     if (parentRes.ok) {
       const parentData = await parentRes.json();
       const parents = parentData.parents || [];
+    
       if (parents.length > 0) {
-        topLevel = parents[0]; // first in chain = top-level
+        // ✅ The LAST parent is the top-level/root
+        topLevel = parents[parents.length - 1];
         console.log(`🌳 Top-level parent found: ${topLevel.name}`);
       } else {
-        console.log("ℹ️ No MLM parents found for affiliate");
+        // No parents — this affiliate IS the top-level
+        topLevel = matchedAffiliate;
+        console.log(`🌳 No parents, top-level = ${matchedAffiliate.name}`);
       }
-    } else {
-      console.warn(
-        `⚠️ Failed to fetch MLM parents for ${matchedAffiliate.id}: ${parentRes.statusText}`
-      );
     }
 
     // 4️⃣ Determine assigned owner based on top-level name
