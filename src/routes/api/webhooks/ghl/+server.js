@@ -1,15 +1,15 @@
 export async function POST({ request }) {
-  // ✅ Optional: security check (keep this)
-  const key = request.headers.get('x-api-key');
+  // ✅ Verify secret
+  const key = request.headers.get("x-api-key");
   if (key !== process.env.WEBHOOK_SECRET) {
-    return new Response('Unauthorized', { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const body = await request.json();
   const contact = body.contacts?.[0];
 
   const targetFieldId = "UJBoqg0TlLO6GAVbzAag"; // ReferredBy custom field ID
-  const field = contact?.customField?.find(f => f.id === targetFieldId);
+  const field = contact?.customField?.find((f) => f.id === targetFieldId);
 
   if (!field) {
     console.log(`ℹ️ No referredBy field for contact ${contact?.id}`);
@@ -17,7 +17,7 @@ export async function POST({ request }) {
       JSON.stringify({
         ok: true,
         referredBy: null,
-        message: "Custom field ReferredBy not found"
+        message: "Custom field ReferredBy not found",
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
@@ -34,8 +34,8 @@ export async function POST({ request }) {
         method: "GET",
         headers: {
           "X-GOAFFPRO-ACCESS-TOKEN": process.env.GOAFFPRO_API_KEY,
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       }
     );
 
@@ -50,7 +50,7 @@ export async function POST({ request }) {
 
     // 2️⃣ Match referredBy to affiliate
     const matchedAffiliate = affiliates.find(
-      a =>
+      (a) =>
         a.ref_code?.toLowerCase() === fieldValue.toLowerCase() ||
         a.name?.toLowerCase() === fieldValue.toLowerCase()
     );
@@ -62,7 +62,7 @@ export async function POST({ request }) {
           ok: true,
           match: null,
           topLevel: null,
-          message: "No affiliate match found"
+          message: "No affiliate match found",
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
@@ -77,8 +77,8 @@ export async function POST({ request }) {
         method: "GET",
         headers: {
           "X-GOAFFPRO-ACCESS-TOKEN": process.env.GOAFFPRO_API_KEY,
-          "Content-Type": "application/json"
-        }
+          "Content-Type": "application/json",
+        },
       }
     );
 
@@ -88,7 +88,7 @@ export async function POST({ request }) {
       const parentData = await parentRes.json();
       const parents = parentData.parents || [];
       if (parents.length > 0) {
-        topLevel = parents[0]; // Top-level (first in chain)
+        topLevel = parents[0]; // first in chain = top-level
         console.log(`🌳 Top-level parent found: ${topLevel.name}`);
       } else {
         console.log("ℹ️ No MLM parents found for affiliate");
@@ -99,7 +99,25 @@ export async function POST({ request }) {
       );
     }
 
-    // 4️⃣ Return results
+    // 4️⃣ Determine assigned owner based on top-level name
+    const OWNER_MAP = {
+      "andrew dorsey": "BajUT5rjQGnHGP1lNUDr",
+      "scott reidl": "VoAjMNrKvRv41DbpVhsA",
+      "raoul bowman": "rjWUeYYFPLEalKgnAD5f",
+      "russell o’hare": "eNQZEXvcLgRfUVYWu2fU",
+      "russell o'hare": "eNQZEXvcLgRfUVYWu2fU", // handles both quote styles
+    };
+
+    const topLevelName = topLevel?.name?.toLowerCase().trim();
+    const assignedTo = topLevelName ? OWNER_MAP[topLevelName] || null : null;
+
+    if (assignedTo) {
+      console.log(`👤 Assigning contact to: ${topLevel.name} (${assignedTo})`);
+    } else {
+      console.log(`ℹ️ No matching owner found for top-level: ${topLevelName}`);
+    }
+
+    // 5️⃣ Return results
     return new Response(
       JSON.stringify({
         ok: true,
@@ -109,15 +127,16 @@ export async function POST({ request }) {
         affiliate: {
           id: matchedAffiliate.id,
           name: matchedAffiliate.name,
-          email: matchedAffiliate.email
+          email: matchedAffiliate.email,
         },
         topLevel: topLevel
           ? {
               id: topLevel.id,
               name: topLevel.name,
-              email: topLevel.email
+              email: topLevel.email,
             }
-          : null
+          : null,
+        assignedTo,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
