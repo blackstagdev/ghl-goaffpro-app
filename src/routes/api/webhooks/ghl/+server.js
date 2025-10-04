@@ -114,10 +114,11 @@ export async function POST({ request }) {
     const OWNER_MAP = {
       "andrew dorsey": "BajUT5rjQGnHGP1lNUDr",
       "john roush": "hdpyoUB6nRTiysyUmTQK",
-      "scott reidl": "VoAjMNrKvRv41DbpVhsA",
+      "scott riedl": "VoAjMNrKvRv41DbpVhsA",
       "raoul bowman": "rjWUeYYFPLEalKgnAD5f",
       "russell o’hare": "eNQZEXvcLgRfUVYWu2fU",
       "russell o'hare": "eNQZEXvcLgRfUVYWu2fU", // normalize both apostrophe types
+      "russell ohare": "eNQZEXvcLgRfUVYWu2fU"
     };
 
     const topLevelName = topLevel?.name?.toLowerCase().trim();
