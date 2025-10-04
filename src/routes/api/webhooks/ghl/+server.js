@@ -70,7 +70,7 @@ export async function POST({ request }) {
 
     console.log("🎉 Match found:", matchedAffiliate);
 
-    // 3️⃣ Fetch MLM parent tree for top-level affiliate
+    // 3️⃣ Fetch MLM parent tree
     const parentRes = await fetch(
       `https://api.goaffpro.com/v1/admin/mlm/parents/${matchedAffiliate.id}`,
       {
@@ -87,16 +87,27 @@ export async function POST({ request }) {
     if (parentRes.ok) {
       const parentData = await parentRes.json();
       const parents = parentData.parents || [];
-    
+
       if (parents.length > 0) {
-        // ✅ The LAST parent is the top-level/root
-        topLevel = parents[parents.length - 1];
-        console.log(`🌳 Top-level parent found: ${topLevel.name}`);
+        const topParentId = parents[parents.length - 1].id;
+
+        // 🔍 Lookup full top-level affiliate details by ID
+        topLevel = affiliates.find((a) => a.id === topParentId);
+
+        if (topLevel) {
+          console.log(`🌳 Top-level parent found: ${topLevel.name}`);
+        } else {
+          console.log(`ℹ️ Parent ID ${topParentId} not found in affiliate list`);
+        }
       } else {
         // No parents — this affiliate IS the top-level
         topLevel = matchedAffiliate;
         console.log(`🌳 No parents, top-level = ${matchedAffiliate.name}`);
       }
+    } else {
+      console.warn(
+        `⚠️ Failed to fetch MLM parents for ${matchedAffiliate.id}: ${parentRes.statusText}`
+      );
     }
 
     // 4️⃣ Determine assigned owner based on top-level name
@@ -106,7 +117,7 @@ export async function POST({ request }) {
       "scott reidl": "VoAjMNrKvRv41DbpVhsA",
       "raoul bowman": "rjWUeYYFPLEalKgnAD5f",
       "russell o’hare": "eNQZEXvcLgRfUVYWu2fU",
-      "russell o'hare": "eNQZEXvcLgRfUVYWu2fU", // handles both quote styles
+      "russell o'hare": "eNQZEXvcLgRfUVYWu2fU", // normalize both apostrophe types
     };
 
     const topLevelName = topLevel?.name?.toLowerCase().trim();
